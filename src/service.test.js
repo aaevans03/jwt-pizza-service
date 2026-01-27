@@ -17,6 +17,8 @@ test('login', async () => {
   expect(loginRes.status).toBe(200);
   expect(loginRes.body.token).toMatch(/^[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*$/);
 
-  const { password, ...user } = { ...testUser, roles: [{ role: 'diner' }] };      // destructuring
+  const user = { ...testUser, roles: [{ role: 'diner' }] };      // destructuring
+  delete user.password;
   expect(loginRes.body.user).toMatchObject(user);
+  expect(loginRes.body.authToken).not.toBe(testUserAuthToken);
 });
