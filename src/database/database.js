@@ -5,8 +5,28 @@ const { StatusCodeError } = require('../endpointHelper.js');
 const { Role } = require('../model/model.js');
 const dbModel = require('./dbModel.js');
 class DB {
+  
+  databaseName = config.db.connection.database;
+
   constructor() {
     this.initialized = this.initializeDatabase();
+  }
+
+  // Create a testing database, as to not populate the real database with fake data
+  setTesting() {
+    this.databaseName = "testing"
+  }
+
+  // Delete testing database (called after testing is done)
+  async deleteTestingDatabase() {
+    if (this.databaseName === "testing") {
+      const connection = await this.getConnection();
+      try {
+        await this.query(connection, `DROP DATABASE ${this.databaseName}`);
+      } finally {
+        connection.end();
+      }
+    }
   }
 
   async getMenu() {
@@ -321,7 +341,7 @@ class DB {
       decimalNumbers: true,
     });
     if (setUse) {
-      await connection.query(`USE ${config.db.connection.database}`);
+      await connection.query(`USE ${this.databaseName}`);
     }
     return connection;
   }
@@ -333,8 +353,8 @@ class DB {
         const dbExists = await this.checkDatabaseExists(connection);
         console.log(dbExists ? 'Database exists' : 'Database does not exist, creating it');
 
-        await connection.query(`CREATE DATABASE IF NOT EXISTS ${config.db.connection.database}`);
-        await connection.query(`USE ${config.db.connection.database}`);
+        await connection.query(`CREATE DATABASE IF NOT EXISTS ${this.databaseName}`);
+        await connection.query(`USE ${this.databaseName}`);
 
         if (!dbExists) {
           console.log('Successfully created database');
@@ -357,7 +377,7 @@ class DB {
   }
 
   async checkDatabaseExists(connection) {
-    const [rows] = await connection.execute(`SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?`, [config.db.connection.database]);
+    const [rows] = await connection.execute(`SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?`, [this.databaseName]);
     return rows.length > 0;
   }
 }
