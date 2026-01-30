@@ -3,8 +3,8 @@ const app = require('../service');
 const { Role, DB } = require('../database/database');
 const { expectValidJwt, randomName } = require('./testHelper');
 
-const testUser = { name: 'pizza diner', email: 'reg@test.com', password: 'a' };
-let testUserAuthToken;
+const adminUser = { name: 'pizza diner', email: 'reg@test.com', password: 'a' };
+let adminUserAuthToken;
 
 async function createAdminUser() {
   let user = { password: 'toomanysecrets', roles: [{ role: Role.Admin }] };
@@ -17,12 +17,15 @@ async function createAdminUser() {
 
 beforeAll(async () => {
     DB.setTesting();
-    createAdminUser();
+    const adminUserResponse = await createAdminUser();
 
-    testUser.email = randomName() + '@test.com';
-    const registerRes = await request(app).post('/api/auth').send(testUser);
-    testUserAuthToken = registerRes.body.token;
-    expectValidJwt(testUserAuthToken);
+    adminUser.name = adminUserResponse.name;
+    adminUser.email = adminUserResponse.email;
+    adminUser.password = adminUserResponse.password;
+    
+    const registerRes = await request(app).post('/api/auth').send(adminUser);
+    adminUserAuthToken = registerRes.body.token;
+    expectValidJwt(adminUserAuthToken);
 });
 
 afterAll(async() => {
@@ -30,7 +33,7 @@ afterAll(async() => {
 })
 
 test('Get Franchises', async () => {
-    const response = await request(app).get('/api/franchise').set('Authorization', `Bearer ${testUserAuthToken}`);
+    const response = await request(app).get('/api/franchise').set('Authorization', `Bearer ${adminUserAuthToken}`);
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('franchises');
