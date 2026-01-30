@@ -23,7 +23,7 @@ beforeAll(async () => {
     adminUser.email = adminUserResponse.email;
     adminUser.password = adminUserResponse.password;
     
-    const registerRes = await request(app).post('/api/auth').send(adminUser);
+    const registerRes = await request(app).put('/api/auth').send({ email: adminUser.email, password: adminUser.password });
     adminUserAuthToken = registerRes.body.token;
     expectValidJwt(adminUserAuthToken);
 });
@@ -38,4 +38,14 @@ test('Get Franchises', async () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('franchises');
     expect(response.body).toHaveProperty('more');
+});
+
+test('Create Franchise', async () => {
+    const response = await request(app).post('/api/franchise').set('Authorization', `Bearer ${adminUserAuthToken}`).send({ name: 'pizzaPocket', admins: [{ email: adminUser.email }]});
+
+    console.log(response.body);
+    expect(response.status).toBe(200);
+    expect(response.body.name).toBe('pizzaPocket');
+    expect(response.body.admins).toEqual([ { email: adminUser.email, id: expect.any(Number), name: adminUser.name } ]);
+    expect(response.body.id).toEqual(expect.any(Number));
 });
