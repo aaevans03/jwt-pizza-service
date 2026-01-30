@@ -30,5 +30,9 @@ afterAll(async() => {
 })
 
 test('Get Franchises', async () => {
+    const response = await request(app).get('/api/franchise').set('Authorization', `Bearer ${testUserAuthToken}`);
 
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('franchises');
+    expect(response.body).toHaveProperty('more');
 });
