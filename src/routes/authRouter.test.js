@@ -1,13 +1,13 @@
 const request = require('supertest');
 const app = require('../service');
 const { DB } = require('../database/database');
+const { expectValidJwt, randomName } =  require('./testHelper')
 
 const testUser = { name: 'pizza diner', email: 'reg@test.com', password: 'a' };
 let testUserAuthToken;
 
-DB.setTesting();
-
 beforeAll(async () => {
+    DB.setTesting();
     testUser.email = randomName() + '@test.com';
     const registerRes = await request(app).post('/api/auth').send(testUser);
     testUserAuthToken = registerRes.body.token;
@@ -52,10 +52,3 @@ test('Logout', async () => {
     expect(logoutRes.body.message).toBe('logout successful');
 })
 
-function expectValidJwt(potentialJwt) {
-    expect(potentialJwt).toMatch(/^[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*$/);
-}
-
-function randomName() {
-    return Math.random().toString(36).substring(2, 12);
-}
