@@ -1,19 +1,11 @@
 const request = require('supertest');
 const app = require('../service');
-const { Role, DB } = require('../database/database');
-const { expectValidJwt, randomName } = require('./testHelper');
+const { DB } = require('../database/database');
+const { expectValidJwt } = require('./testHelper');
+const { createAdminUser } = require('./factories');
 
 const adminUser = { name: 'pizza diner', email: 'reg@test.com', password: 'a' };
 let adminUserAuthToken;
-
-async function createAdminUser() {
-  let user = { password: 'toomanysecrets', roles: [{ role: Role.Admin }] };
-  user.name = randomName();
-  user.email = user.name + '@admin.com';
-
-  user = await DB.addUser(user);
-  return { ...user, password: 'toomanysecrets' };
-}
 
 beforeAll(async () => {
     DB.setTesting();
@@ -31,10 +23,6 @@ beforeAll(async () => {
 
 afterAll(async() => {
     await DB.deleteTestingDatabase();
-});
-
-beforeEach(async () => {
-    
 });
 
 // helper functions: create dummy franchises, delete all franchises

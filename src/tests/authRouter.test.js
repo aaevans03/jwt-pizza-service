@@ -54,7 +54,7 @@ test('Logout', async () => {
     const testUserAuthToken = loginRes.body.token;
 
     // Try logging out
-    const logoutRes = await (await request(app).delete('/api/auth').set('Authorization', `Bearer ${testUserAuthToken}`));
+    const logoutRes = await request(app).delete('/api/auth').set('Authorization', `Bearer ${testUserAuthToken}`);
     expect(logoutRes.status).toBe(200);
     expect(logoutRes.body.message).toBe('logout successful');
 })
