@@ -2,7 +2,7 @@ const request = require('supertest');
 const app = require('../service');
 const { DB } = require('../database/database');
 const { expectValidJwt } = require('./testHelper');
-const { createTestUser, createAdminUser, createFranchise, createStore } = require('./factories');
+const { createAdminUser } = require('./factories');
 
 let adminUser;
 let adminUserAuthToken;
