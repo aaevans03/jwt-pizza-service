@@ -23,4 +23,16 @@ async function createAdminUser(overrides = {}) {
     });
 }
 
-module.exports = { createTestUser, createAdminUser };
+async function createFranchise(adminEmail, overrides = {}) {
+
+    const defaults = {
+        name: randomName() + ' Pizza',
+        admins: [{ email: adminEmail }],
+    };
+    let franchiseData = { ...defaults, ...overrides };
+
+    franchiseData = await DB.createFranchise(franchiseData);
+    return { ...franchiseData, ...overrides };
+}
+
+module.exports = { createTestUser, createAdminUser, createFranchise };
