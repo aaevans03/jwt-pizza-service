@@ -2,7 +2,7 @@ const request = require('supertest');
 const app = require('../service');
 const { DB } = require('../database/database');
 const { expectValidJwt } = require('./testHelper');
-const { createTestUser, createAdminUser, createFranchise } = require('./factories');
+const { createTestUser, createAdminUser, createFranchise, createStore } = require('./factories');
 
 const adminUser = { name: 'pizza diner', email: 'reg@test.com', password: 'a' };
 let adminUserAuthToken;
@@ -79,10 +79,23 @@ test('Create Franchise Non-Admin', async () => {
 });
 
 test('Delete Franchise', async () => {
-    const franchiseInfo = createFranchise(adminUser.email, { name: 'Delete Me' });
+    const franchiseInfo = await createFranchise(adminUser.email, { name: 'Delete Me' });
     
     const response = await request(app).delete('/api/franchise/' + franchiseInfo.id).set('Authorization', `Bearer ${adminUserAuthToken}`);
 
     expect(response.status).toBe(200);
     expect(response.body.message).toBe('franchise deleted');
+});
+
+test('Create Store', async () => {
+    const franchiseInfo = await createFranchise(adminUser.email);
+    
+    const storeInfo = await createStore(franchiseInfo.id);
+    console.log(storeInfo);
+    
+    const response = await request(app).post('/api/franchise/' + franchiseInfo.id + '/store').set('Authorization', `Bearer ${adminUserAuthToken}`).send({ name: 'New Store' });
+    expect(response.status).toBe(200);
+    expect(response.body.id).toEqual(expect.any(Number));
+    expect(response.body.franchiseId).toBe(franchiseInfo.id);
+    expect(response.body.name).toEqual(expect.any(String));
 });
