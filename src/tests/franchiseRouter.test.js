@@ -2,7 +2,7 @@ const request = require('supertest');
 const app = require('../service');
 const { DB } = require('../database/database');
 const { expectValidJwt } = require('./testHelper');
-const { createAdminUser, createFranchise } = require('./factories');
+const { createTestUser, createAdminUser, createFranchise } = require('./factories');
 
 const adminUser = { name: 'pizza diner', email: 'reg@test.com', password: 'a' };
 let adminUserAuthToken;
@@ -66,6 +66,16 @@ test('Create Franchise', async () => {
     expect(response.body.name).toBe('pizzaPocket');
     expect(response.body.admins).toEqual([ { email: adminUser.email, id: expect.any(Number), name: adminUser.name } ]);
     expect(response.body.id).toEqual(expect.any(Number));
+});
+
+test('Create Franchise Non-Admin', async () => {
+    const testUser = await createTestUser({ password: 'hello' });
+    const loginRes = await request(app).put('/api/auth').send(testUser);
+    const testUserAuthToken = loginRes.body.token;
+    const response = await request(app).post('/api/franchise').set('Authorization', `Bearer ${testUserAuthToken}`).send({ name: 'Fake Store', admins: [{ email: adminUser.email }]});
+
+    expect(response.status).toBe(403);
+    expect(response.body.message).toBe('unable to create a franchise');
 });
 
 test('Delete Franchise', async () => {
