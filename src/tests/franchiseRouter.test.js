@@ -2,7 +2,7 @@ const request = require('supertest');
 const app = require('../service');
 const { DB } = require('../database/database');
 const { expectValidJwt } = require('./testHelper');
-const { createAdminUser } = require('./factories');
+const { createAdminUser, createFranchise } = require('./factories');
 
 const adminUser = { name: 'pizza diner', email: 'reg@test.com', password: 'a' };
 let adminUserAuthToken;
@@ -25,8 +25,6 @@ afterAll(async() => {
     await DB.deleteTestingDatabase();
 });
 
-// helper functions: create dummy franchises, delete all franchises
-
 test('Get Franchises', async () => {
     const response = await request(app).get('/api/franchise').set('Authorization', `Bearer ${adminUserAuthToken}`);
 
@@ -36,30 +34,29 @@ test('Get Franchises', async () => {
 });
 
 test('Get User Franchises', async () => {
-    await request(app).post('/api/franchise').set('Authorization', `Bearer ${adminUserAuthToken}`).send({ name: 'My Franchise 1', admins: [{ email: adminUser.email }]});
-    await request(app).post('/api/franchise').set('Authorization', `Bearer ${adminUserAuthToken}`).send({ name: 'My Franchise 2', admins: [{ email: adminUser.email }]});
+    await createFranchise(adminUser.email, { name: 'My Franchise 1' });
+    await createFranchise(adminUser.email, { name: 'My Franchise 2' });
 
     const response = await request(app).get('/api/franchise/' + adminUser.id).set('Authorization', `Bearer ${adminUserAuthToken}`);
 
     expect(response.status).toBe(200);
-    expect(Array.isArray(response.body)).toBe(true);
     expect(response.body.length).toBeGreaterThan(0);
 
-    for (let i = 0; i < response.body.length; i++) {
-        const franchise = response.body[i];
-        expect(franchise).toHaveProperty('name');
-        expect(franchise).toHaveProperty('id');
-        expect(franchise).toHaveProperty('admins');
-
-        expect(franchise.admins).toContainEqual({ id: adminUser.id, name: adminUser.name, email: adminUser.email });
-
-        for (let j = 0; j < franchise.admins.length; j++) {
-            expect(franchise.admins[j]).toHaveProperty('id');
-            expect(franchise.admins[j]).toHaveProperty('name');
-            expect(franchise.admins[j]).toHaveProperty('email');
-        }
-        expect(franchise).toHaveProperty('stores');
-    }
+    // For each franchise in the response, make sure it fits the format
+    response.body.forEach(franchise => {
+        expect(franchise).toMatchObject({
+            name: expect.any(String),
+            id: expect.any(Number),
+            stores: expect.any(Array),
+            admins: expect.arrayContaining([
+                expect.objectContaining({
+                    id: adminUser.id,
+                    name: adminUser.name,
+                    email: adminUser.email,
+                }),
+            ]),
+        });
+    });
 });
 
 test('Create Franchise', async () => {
@@ -69,4 +66,8 @@ test('Create Franchise', async () => {
     expect(response.body.name).toBe('pizzaPocket');
     expect(response.body.admins).toEqual([ { email: adminUser.email, id: expect.any(Number), name: adminUser.name } ]);
     expect(response.body.id).toEqual(expect.any(Number));
+});
+
+test('Delete Franchise', async () => {
+    
 });
