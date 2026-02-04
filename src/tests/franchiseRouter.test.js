@@ -79,5 +79,10 @@ test('Create Franchise Non-Admin', async () => {
 });
 
 test('Delete Franchise', async () => {
+    const franchiseInfo = createFranchise(adminUser.email, { name: 'Delete Me' });
     
+    const response = await request(app).delete('/api/franchise/' + franchiseInfo.id).set('Authorization', `Bearer ${adminUserAuthToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.message).toBe('franchise deleted');
 });
