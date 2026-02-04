@@ -1,7 +1,7 @@
 const request = require('supertest');
 const app = require('../service');
 const { Role, DB } = require('../database/database');
-const { expectValidJwt, randomName } = require('../routes/testHelper');
+const { expectValidJwt, randomName } = require('./testHelper');
 
 const adminUser = { name: 'pizza diner', email: 'reg@test.com', password: 'a' };
 let adminUserAuthToken;
