@@ -4,17 +4,21 @@ const { DB } = require('../database/database');
 const { expectValidJwt } = require('./testHelper');
 const { createTestUser, createAdminUser, createFranchise, createStore } = require('./factories');
 
-const adminUser = { name: 'pizza diner', email: 'reg@test.com', password: 'a' };
+let adminUser;
 let adminUserAuthToken;
 
 beforeAll(async () => {
     DB.setTesting();
+
+    // create an admin user to use for all of these tests
     const adminUserResponse = await createAdminUser();
 
-    adminUser.name = adminUserResponse.name;
-    adminUser.email = adminUserResponse.email;
-    adminUser.password = adminUserResponse.password;
-    adminUser.id = adminUserResponse.id;
+    adminUser = {
+        name: adminUserResponse.name,
+        email: adminUserResponse.email,
+        password: adminUserResponse.password,
+        id: adminUserResponse.id
+    };
     
     const registerRes = await request(app).put('/api/auth').send({ email: adminUser.email, password: adminUser.password });
     adminUserAuthToken = registerRes.body.token;
