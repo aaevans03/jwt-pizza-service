@@ -17,16 +17,10 @@ async function createTestUser(overrides = {}) {
 };
 
 async function createAdminUser(overrides = {}) {
-    const defaults = {
-        name: randomName(),
-        email: randomName() + '@test.com',
-        password: 'testpassword',
+    return createTestUser({
         roles: [{ role: Role.Admin }],
-    }
-    let user = { ...defaults, ...overrides };
-
-    user = await DB.addUser(user);
-    return { ...user, ...overrides };
+        ...overrides,
+    });
 }
 
 module.exports = { createTestUser, createAdminUser };
