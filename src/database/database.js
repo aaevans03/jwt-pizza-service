@@ -14,7 +14,10 @@ class DB {
 
   // Create a testing database, as to not populate the real database with fake data
   setTesting() {
-    this.databaseName = "testing"
+    if (!this.databaseName != "testing") {
+      this.databaseName = "testing"
+      this.initialized = this.initializeDatabase();
+    }
   }
 
   // Delete testing database (called after testing is done)
