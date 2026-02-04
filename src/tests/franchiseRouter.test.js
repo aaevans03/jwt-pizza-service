@@ -90,12 +90,19 @@ test('Delete Franchise', async () => {
 test('Create Store', async () => {
     const franchiseInfo = await createFranchise(adminUser.email);
     
-    const storeInfo = await createStore(franchiseInfo.id);
-    console.log(storeInfo);
-    
     const response = await request(app).post('/api/franchise/' + franchiseInfo.id + '/store').set('Authorization', `Bearer ${adminUserAuthToken}`).send({ name: 'New Store' });
     expect(response.status).toBe(200);
     expect(response.body.id).toEqual(expect.any(Number));
     expect(response.body.franchiseId).toBe(franchiseInfo.id);
     expect(response.body.name).toEqual(expect.any(String));
+});
+
+test('Delete Store', async () => {
+    const franchiseInfo = await createFranchise(adminUser.email);
+    const storeInfo = await createStore(franchiseInfo.id);
+    
+    const response = await request(app).delete('/api/franchise/' + franchiseInfo.id + '/store/' + storeInfo.id).set('Authorization', `Bearer ${adminUserAuthToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.message).toBe('store deleted');
 });
