@@ -57,4 +57,7 @@ test('Admin update info of self', async () => {
     expectValidJwt(response.body.token);
 });
 
-// FUTURE: Test-driven development with new userRouter endpoints
+test('List users unauthorized', async () => {
+    const response = await request(app).get('/api/user');
+    expect(response.status).toBe(401);
+});
