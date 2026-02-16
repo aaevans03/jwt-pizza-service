@@ -2,7 +2,7 @@ const request = require('supertest');
 const app = require('../service');
 const { DB } = require('../database/database');
 const { expectValidJwt } = require('./testHelper');
-const { createAdminUser } = require('./factories');
+const { createAdminUser, createTestUser } = require('./factories');
 
 let adminUser;
 let adminUserAuthToken;
@@ -55,6 +55,12 @@ test('Admin update info of self', async () => {
     expect(response.body.user.email).toBe(updatedEmail);
     expect(response.body.user.roles).toEqual([{ role: 'admin' }]);
     expectValidJwt(response.body.token);
+
+    // Update adminUser for future tests
+    adminUser.name = updatedName;
+    adminUser.email = updatedEmail;
+    adminUser.password = updatedPassword;
+    adminUserAuthToken = response.body.token;
 });
 
 test('List users unauthorized', async () => {
@@ -64,6 +70,7 @@ test('List users unauthorized', async () => {
 
 test('List users', async () => {
     const adminUserResponse = await createAdminUser();
+    const userResponse = await createTestUser();
 
     const response = await request(app)
         .get('/api/user')
@@ -83,13 +90,21 @@ test('List users', async () => {
         }),
     ]));
 
-    // Expect the admin user we just created to be in the response
+    // Expect the users we just created to be in response
     expect(response.body.users).toEqual(expect.arrayContaining([
         expect.objectContaining({
             id: adminUserResponse.id,
             name: adminUserResponse.name,
             email: adminUserResponse.email,
             roles: [{ role: 'admin' }],
+        })
+    ]));
+    expect(response.body.users).toEqual(expect.arrayContaining([
+        expect.objectContaining({
+            id: userResponse.id,
+            name: userResponse.name,
+            email: userResponse.email,
+            roles: [{ role: 'diner' }],
         })
     ]));
 });
