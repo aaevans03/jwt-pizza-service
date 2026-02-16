@@ -98,6 +98,21 @@ class DB {
     }
   }
 
+  async getUserList() {
+    const connection = await this.getConnection();
+    try {
+      const userResult = await this.query(connection, `SELECT id, name, email FROM user`);
+
+      for (const user of userResult) {
+        user.roles = await this.query(connection, `SELECT role FROM userRole WHERE userId=?`, [user.id]);
+      }
+
+      return userResult;
+    } finally {
+      connection.end();
+    }
+  }
+
   async updateUser(userId, name, email, password) {
     const connection = await this.getConnection();
     try {

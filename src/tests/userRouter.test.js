@@ -20,8 +20,8 @@ beforeAll(async () => {
         id: adminUserResponse.id
     };
     
-    const registerRes = await request(app).put('/api/auth').send({ email: adminUser.email, password: adminUser.password });
-    adminUserAuthToken = registerRes.body.token;
+    const loginRes = await request(app).put('/api/auth').send({ email: adminUser.email, password: adminUser.password });
+    adminUserAuthToken = loginRes.body.token;
     expectValidJwt(adminUserAuthToken);
 });
 
@@ -60,4 +60,36 @@ test('Admin update info of self', async () => {
 test('List users unauthorized', async () => {
     const response = await request(app).get('/api/user');
     expect(response.status).toBe(401);
+});
+
+test('List users', async () => {
+    const adminUserResponse = await createAdminUser();
+
+    const response = await request(app)
+        .get('/api/user')
+        .set('Authorization', `Bearer ${adminUserAuthToken}`);
+    
+    expect(response.status).toBe(200);
+    expect(response.body.users).toBeDefined();
+    expect(response.body.users.length).toBeGreaterThan(0);
+
+    // Check format of response
+    expect(response.body.users).toEqual(expect.arrayContaining([
+        expect.objectContaining({
+            id: expect.any(Number),
+            name: expect.any(String),
+            email: expect.any(String),
+            roles: expect.any(Array),
+        }),
+    ]));
+
+    // Expect the admin user we just created to be in the response
+    expect(response.body.users).toEqual(expect.arrayContaining([
+        expect.objectContaining({
+            id: adminUserResponse.id,
+            name: adminUserResponse.name,
+            email: adminUserResponse.email,
+            roles: [{ role: 'admin' }],
+        })
+    ]));
 });
