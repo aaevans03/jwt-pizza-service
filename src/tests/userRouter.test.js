@@ -122,6 +122,7 @@ test('List users with pagination', async () => {
     expect(response.status).toBe(200);
     expect(response.body.users.length).toBe(10);
     expect(response.body.more).toBe(true);
+    expect(response.body.users[0].id).toBe(1);
     
     // The initial admin user should be in the result
     expect(response.body.users).toEqual(expect.arrayContaining([
@@ -132,4 +133,46 @@ test('List users with pagination', async () => {
             roles: [{ role: 'admin' }],
         })
     ]));
+});
+
+test('List users on second page', async () => {
+    for (let i = 0; i < 10; i++) {
+        await createTestUser();
+    }
+
+    const response = await request(app)
+        .get('/api/user?page=1&limit=10')
+        .set('Authorization', `Bearer ${adminUserAuthToken}`);
+    
+    expect(response.status).toBe(200);
+    expect(response.body.users.length).toBe(10);
+    expect(response.body.more).toBe(true);
+    expect(response.body.users[0].id).toBe(11);
+    expect(response.body.users[9].id).toBe(20);
+
+    // The initial admin user should not be in the result
+    expect(response.body.users).not.toEqual(expect.arrayContaining([
+        expect.objectContaining({
+            id: adminUser.id,
+            name: adminUser.name,
+            email: adminUser.email,
+            roles: [{ role: 'admin' }],
+        })
+    ]));
+});
+
+test('List 25 users', async () => {
+    for (let i = 0; i < 25; i++) {
+        await createTestUser();
+    }
+
+    const response = await request(app)
+        .get('/api/user?page=0&limit=25')
+        .set('Authorization', `Bearer ${adminUserAuthToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.users.length).toBe(25);
+    expect(response.body.more).toBe(true);
+    expect(response.body.users[0].id).toBe(1);
+    expect(response.body.users[24].id).toBe(25);
 });
