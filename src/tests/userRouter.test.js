@@ -87,8 +87,9 @@ test('List users', async () => {
             name: expect.any(String),
             email: expect.any(String),
             roles: expect.any(Array),
-        }),
-    ]));
+        })],
+        expect.any(Boolean),
+    ));
 
     // Expect the users we just created to be in response
     expect(response.body.users).toEqual(expect.arrayContaining([
@@ -105,6 +106,30 @@ test('List users', async () => {
             name: userResponse.name,
             email: userResponse.email,
             roles: [{ role: 'diner' }],
+        })
+    ]));
+});
+
+test('List users with pagination', async () => {
+    for (let i = 0; i < 25; i++) {
+        await createTestUser();
+    }
+
+    const response = await request(app)
+        .get('/api/user?page=0&limit=10')
+        .set('Authorization', `Bearer ${adminUserAuthToken}`);
+    
+    expect(response.status).toBe(200);
+    expect(response.body.users.length).toBe(10);
+    expect(response.body.more).toBe(true);
+    
+    // The initial admin user should be in the result
+    expect(response.body.users).toEqual(expect.arrayContaining([
+        expect.objectContaining({
+            id: adminUser.id,
+            name: adminUser.name,
+            email: adminUser.email,
+            roles: [{ role: 'admin' }],
         })
     ]));
 });
