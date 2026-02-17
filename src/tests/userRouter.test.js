@@ -176,3 +176,28 @@ test('List 25 users', async () => {
     expect(response.body.users[0].id).toBe(1);
     expect(response.body.users[24].id).toBe(25);
 });
+
+test('List users with name filter', async () => {
+    const username = "Pizza Lover 12345";
+    const user1 = await createTestUser({ name: username });
+    const user2 = await createAdminUser({ name: username });
+
+    const response = await request(app)
+        .get('/api/user?name=' + user1.name)
+        .set('Authorization', `Bearer ${adminUserAuthToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.users.length).toBe(2);
+
+    expect(response.body.users[0].id).toBe(user1.id);
+    expect(response.body.users[0].name).toBe(user1.name);
+    expect(response.body.users[0].email).toBe(user1.email);
+    expect(response.body.users[0].roles).toEqual(expect.arrayContaining([{ role: 'diner' }]));
+
+    expect(response.body.users[1].id).toBe(user2.id);
+    expect(response.body.users[1].name).toBe(user2.name);
+    expect(response.body.users[1].email).toBe(user2.email);
+    expect(response.body.users[1].roles).toEqual(expect.arrayContaining([{ role: 'admin' }]));
+
+    console.log(response.body);
+});
