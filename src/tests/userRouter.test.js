@@ -183,11 +183,12 @@ test('List users with name filter', async () => {
     const user2 = await createAdminUser({ name: username });
 
     const response = await request(app)
-        .get('/api/user?name=' + user1.name)
+        .get(`/api/user?name=${user1.name}`)
         .set('Authorization', `Bearer ${adminUserAuthToken}`);
 
     expect(response.status).toBe(200);
     expect(response.body.users.length).toBe(2);
+    expect(response.body.more).toBe(false);
 
     expect(response.body.users[0].id).toBe(user1.id);
     expect(response.body.users[0].name).toBe(user1.name);
@@ -198,6 +199,14 @@ test('List users with name filter', async () => {
     expect(response.body.users[1].name).toBe(user2.name);
     expect(response.body.users[1].email).toBe(user2.email);
     expect(response.body.users[1].roles).toEqual(expect.arrayContaining([{ role: 'admin' }]));
+});
 
-    console.log(response.body);
+test('List users with name filter of nonexistent user', async () => {
+    const response = await request(app)
+        .get("/api/user?name=nonexistentUser")
+        .set('Authorization', `Bearer ${adminUserAuthToken}`);
+    
+    expect(response.status).toBe(200);
+    expect(response.body.users.length).toBe(0);
+    expect(response.body.more).toBe(false);
 });
