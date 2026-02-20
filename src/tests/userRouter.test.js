@@ -210,3 +210,36 @@ test('List users with name filter of nonexistent user', async () => {
     expect(response.body.users.length).toBe(0);
     expect(response.body.more).toBe(false);
 });
+
+test('Delete a user', async () => {
+    const userToDelete = await createTestUser();
+
+    const deleteResponse = await request(app)
+        .delete(`/api/user/${userToDelete.id}`)
+        .set('Authorization', `Bearer ${adminUserAuthToken}`);
+    
+    expect(deleteResponse.body.message).toBe('user deleted');
+    expect(deleteResponse.status).toBe(200);
+
+    // See if user is in list of users
+    const response = await request(app)
+        .get('/api/user')
+        .set('Authorization', `Bearer ${adminUserAuthToken}`);
+    
+    expect(response.status).toBe(200);
+    expect(response.body.users).toBeDefined();
+
+    const deletedUser = response.body.users.find(u => u.id === userToDelete.id);
+    expect(deletedUser).toBeUndefined();
+});
+
+test('Delete nonexistent user', async () => {
+    const userIdToDelete = 999999;
+
+    const response = await request(app)
+        .delete(`/api/user/${userIdToDelete}`)
+        .set('Authorization', `Bearer ${adminUserAuthToken}`);
+    
+    expect(response.status).toBe(500);
+    expect(response.body.message).toBe('unknown user');
+});

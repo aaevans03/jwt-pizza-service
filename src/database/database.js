@@ -78,6 +78,31 @@ class DB {
     }
   }
 
+  async deleteUser(userId) {
+    const connection = await this.getConnection();
+    let user;
+    try {
+      const userResult = await this.query(connection, `SELECT * FROM user WHERE id=?`, [userId]);
+      user = userResult[0];
+      if (!user) {
+        throw new StatusCodeError();
+      }
+
+      await this.query(connection, `DELETE FROM auth WHERE userId=?`, [userId]);
+      await this.query(connection, `DELETE FROM userRole WHERE userId=?`, [userId]);
+      await this.query(connection, `DELETE FROM dinerOrder WHERE dinerId=?`, [userId]);
+      await this.query(connection, `DELETE FROM user WHERE id=?`, [userId]);
+    } catch {
+      await connection.rollback();
+      if (!user) {
+        throw new StatusCodeError('unknown user', 500);
+      }
+      throw new StatusCodeError('unable to delete user', 500);
+    } finally {
+      connection.end();
+    }
+  }
+  
   async getUser(email, password) {
     const connection = await this.getConnection();
     try {
