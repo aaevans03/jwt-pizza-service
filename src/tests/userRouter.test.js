@@ -63,6 +63,29 @@ test('Admin update info of self', async () => {
     adminUserAuthToken = response.body.token;
 });
 
+test('User update info of self', async () => {
+    const user = await createTestUser();
+    const loginRes = await request(app).put('/api/auth').send(user);
+    expect(loginRes.status).toBe(200);
+    expectValidJwt(loginRes.body.token);
+
+    const updatedName = 'Updated Name';
+    const updatedEmail = 'updated_email@jwt.com';
+    const updatedPassword = 'newpassword123';
+
+    const response = await request(app)
+        .put(`/api/user/${user.id}`)
+        .set('Authorization', `Bearer ${loginRes.body.token}`)
+        .send({ name: updatedName, email: updatedEmail, password: updatedPassword });
+
+    expect(response.status).toBe(200);
+    expect(response.body.user.id).toBe(user.id);
+    expect(response.body.user.name).toBe(updatedName);
+    expect(response.body.user.email).toBe(updatedEmail);
+    expect(response.body.user.roles).toEqual([{ role: 'diner' }]);
+    expectValidJwt(response.body.token);
+});
+
 test('List users unauthorized', async () => {
     const response = await request(app).get('/api/user');
     expect(response.status).toBe(401);
