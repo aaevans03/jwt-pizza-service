@@ -19,13 +19,65 @@ const config = require('./config');
  *      - Pizza creation
  */
 
+// Metrics stored in memory
+const requests = {};
 
-// Add tracking here
+// Middleware to track requests
+function requestTracker(req, res, next) {
+    const endpoint = req.method;
+    requests[endpoint] = (requests[endpoint] | 0) + 1;
 
+    next();
+}
+
+// Send metrics to Grafana every 10 seconds
 setInterval(() => {
-    sendMetricToGrafana("placeholder");
+    const metrics = [];
+
+    // HTTP Requests
+    let totalRequests = 0;
+    Object.keys(requests).forEach((endpoint) => {
+        totalRequests += requests[endpoint]
+        metrics.push(createMetric('requests', requests[endpoint], '1', 'sum', 'asInt', { endpoint }));
+    });
+
+    metrics.push(createMetric('requests', totalRequests, '1', 'sum', 'asInt', { "endpoint": "Total" }));
+
+
+    sendMetricToGrafana(metrics);
 }, 10000);
 
+function createMetric(metricName, metricValue, metricUnit, metricType, valueType, attributes) {
+    attributes = { ...attributes, source: config.metrics.source };
+
+    const metric = {
+        name: metricName,
+        unit: metricUnit,
+        [metricType]: {
+            dataPoints: [
+                {
+                    [valueType]: metricValue,
+                    timeUnixNano: Date.now() * 1000000,
+                    attributes: [],
+                },
+            ],
+        },
+    };
+
+    Object.keys(attributes).forEach((key) => {
+        metric[metricType].dataPoints[0].attributes.push({
+            key: key,
+            value: { stringValue: attributes[key] },
+        });
+    });
+
+    if (metricType === 'sum') {
+        metric[metricType].aggregationTemporality = 'AGGREGATION_TEMPORALITY_CUMULATIVE';
+        metric[metricType].isMonotonic = true;
+    }
+
+    return metric;
+}
 
 function sendMetricToGrafana(metrics) {
     const body = {
@@ -40,10 +92,10 @@ function sendMetricToGrafana(metrics) {
         ],
     };
 
-    fetch(`${config.endpointUrl}`, {
+    fetch(`${config.metrics.endpointUrl}`, {
         method: 'POST',
         body: JSON.stringify(body),
-        headers: { Authorization: `Bearer ${config.accountId}:${config.apiKey}`, 'Content-Type': 'application/json' },
+        headers: { Authorization: `Bearer ${config.metrics.accountId}:${config.metrics.apiKey}`, 'Content-Type': 'application/json' },
     })
         .then((response) => {
             if (!response.ok) {
@@ -54,3 +106,5 @@ function sendMetricToGrafana(metrics) {
             console.error('Error pushing metrics:', error);
         });
 }
+
+module.exports = { requestTracker };
