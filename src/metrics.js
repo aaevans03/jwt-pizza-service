@@ -21,13 +21,31 @@ const config = require('./config');
 
 // Metrics stored in memory
 const requests = {};
+const activeUsers = {};
 
 // Middleware to track requests
 function requestTracker(req, res, next) {
     const endpoint = req.method;
     requests[endpoint] = (requests[endpoint] | 0) + 1;
 
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+        addActiveUser(authHeader);
+    }
+
     next();
+}
+
+function addActiveUser(authHeader) {
+    let authToken = authHeader;
+    if (authHeader.includes(' ')) {
+        authToken = authHeader.split(' ')[1];
+    }
+    activeUsers[authToken] = Date.now();
+}
+
+function removeActiveUser(user) {
+    delete activeUsers[user];
 }
 
 // Send metrics to Grafana every 10 seconds
@@ -43,6 +61,18 @@ setInterval(() => {
 
     metrics.push(createMetric('requests', totalRequests, '1', 'sum', 'asInt', { "endpoint": "Total" }));
 
+    // Active users
+    // If user hasn't made a request in 5 minutes, remove them from the list of active users
+    let activeUserCount = 0;
+    Object.keys(activeUsers).forEach((user) => {
+        if (Date.now() - activeUsers[user] > 300000) {
+            removeActiveUser(user);
+        } else {
+            activeUserCount++;
+        }
+    });
+    metrics.push(createMetric('activeUserCount', activeUserCount, '1', 'gauge', 'asInt', {}));
+    console.log(activeUsers);
 
     sendMetricToGrafana(metrics);
 }, 10000);
@@ -107,4 +137,4 @@ function sendMetricToGrafana(metrics) {
         });
 }
 
-module.exports = { requestTracker };
+module.exports = { requestTracker, addActiveUser, removeActiveUser };
