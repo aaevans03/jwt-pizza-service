@@ -22,6 +22,8 @@ const config = require('./config');
 // Metrics stored in memory
 const requests = {};
 const activeUsers = {};
+let successfulAuthAttempts = 0;
+let failedAuthAttempts = 0;
 
 // Middleware to track requests
 function requestTracker(req, res, next) {
@@ -46,6 +48,18 @@ function addActiveUser(authHeader) {
 
 function removeActiveUser(user) {
     delete activeUsers[user];
+}
+
+function logSuccessfulAuthAttempt() {
+    successfulAuthAttempts += 1;
+}
+
+function logFailedAuthAttempt(reverse) {
+    if (reverse === "reverse") {
+        failedAuthAttempts -= 1;
+    } else {
+        failedAuthAttempts += 1;
+    }
 }
 
 // Send metrics to Grafana every 10 seconds
@@ -73,6 +87,10 @@ setInterval(() => {
     });
     metrics.push(createMetric('activeUserCount', activeUserCount, '1', 'gauge', 'asInt', {}));
     console.log(activeUsers);
+
+    // Authentication attempts per minute
+    metrics.push(createMetric('authAttempts', successfulAuthAttempts, '1', 'sum', 'asInt', { "type": "success" }))
+    metrics.push(createMetric('authAttempts', failedAuthAttempts, '1', 'sum', 'asInt', { "type": "failure" }))
 
     sendMetricToGrafana(metrics);
 }, 10000);
@@ -137,4 +155,4 @@ function sendMetricToGrafana(metrics) {
         });
 }
 
-module.exports = { requestTracker, addActiveUser, removeActiveUser };
+module.exports = { requestTracker, addActiveUser, removeActiveUser, successfulAuthAttempt: logSuccessfulAuthAttempt, unsuccessfulAuthAttempt: logFailedAuthAttempt };

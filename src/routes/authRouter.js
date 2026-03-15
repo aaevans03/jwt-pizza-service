@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const config = require('../config.js');
 const { asyncHandler } = require('../endpointHelper.js');
 const { DB, Role } = require('../database/database.js');
-const { removeActiveUser, addActiveUser } = require('../metrics.js');
+const { removeActiveUser, addActiveUser, successfulAuthAttempt, unsuccessfulAuthAttempt } = require('../metrics.js');
 
 const authRouter = express.Router();
 
@@ -51,15 +51,23 @@ async function setAuthUser(req, res, next) {
 // Authenticate token
 authRouter.authenticateToken = (req, res, next) => {
   if (!req.user) {
+    unsuccessfulAuthAttempt();
     return res.status(401).send({ message: 'unauthorized' });
+  } else {
+    successfulAuthAttempt();
   }
   next();
 };
 
+authRouter.use('/', (req, res, next) => {
+  unsuccessfulAuthAttempt(false);
+  next();
+});
+
 // register
 authRouter.post(
   '/',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res, next) => {
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'name, email, and password are required' });
@@ -68,18 +76,20 @@ authRouter.post(
     const auth = await setAuth(user);
     addActiveUser(auth);
     res.json({ user: user, token: auth });
+    next();
   })
 );
 
 // login
 authRouter.put(
   '/',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res, next) => {
     const { email, password } = req.body;
     const user = await DB.getUser(email, password);
     const auth = await setAuth(user);
     addActiveUser(auth);
     res.json({ user: user, token: auth });
+    next();
   })
 );
 
@@ -87,13 +97,22 @@ authRouter.put(
 authRouter.delete(
   '/',
   authRouter.authenticateToken,
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res, next) => {
     await clearAuth(req);
     
     removeActiveUser((req.headers.authorization).split(' ')[1]);
     res.json({ message: 'logout successful' });
+    next();
   })
 );
+
+// Success if everything was good
+authRouter.use('/', (req, res) => {
+  if (res.statusCode === 200) {
+    unsuccessfulAuthAttempt("reverse");
+    successfulAuthAttempt();
+  }
+});
 
 async function setAuth(user) {
   const token = jwt.sign(user, config.jwtSecret);
