@@ -1,4 +1,5 @@
 const config = require('./config');
+const os = require('os');
 
 /**
  * Metrics needed:
@@ -62,6 +63,19 @@ function logFailedAuthAttempt(reverse) {
     }
 }
 
+function getCpuUsagePercentage() {
+    const cpuUsage = os.loadavg()[0] / os.cpus().length;
+    return Math.floor(cpuUsage.toFixed(2) * 100);
+}
+
+function getMemoryUsagePercentage() {
+    const totalMemory = os.totalmem();
+    const freeMemory = os.freemem();
+    const usedMemory = totalMemory - freeMemory;
+    const memoryUsage = (usedMemory / totalMemory) * 100;
+    return memoryUsage.toFixed(2);
+}
+
 // Send metrics to Grafana every 10 seconds
 setInterval(() => {
     const metrics = [];
@@ -86,11 +100,14 @@ setInterval(() => {
         }
     });
     metrics.push(createMetric('activeUserCount', activeUserCount, '1', 'gauge', 'asInt', {}));
-    console.log(activeUsers);
 
     // Authentication attempts per minute
-    metrics.push(createMetric('authAttempts', successfulAuthAttempts, '1', 'sum', 'asInt', { "type": "success" }))
-    metrics.push(createMetric('authAttempts', failedAuthAttempts, '1', 'sum', 'asInt', { "type": "failure" }))
+    metrics.push(createMetric('authAttempts', successfulAuthAttempts, '1', 'sum', 'asInt', { "type": "success" }));
+    metrics.push(createMetric('authAttempts', failedAuthAttempts, '1', 'sum', 'asInt', { "type": "failure" }));
+
+    // System CPU and Memory usage
+    metrics.push(createMetric('cpuUsage', getCpuUsagePercentage(), '1', 'gauge', 'asDouble', {}));
+    metrics.push(createMetric('memoryUsage', getMemoryUsagePercentage(), '1', 'gauge', 'asDouble', {}));
 
     sendMetricToGrafana(metrics);
 }, 10000);
