@@ -25,9 +25,16 @@ const requests = {};
 const activeUsers = {};
 let successfulAuthAttempts = 0;
 let failedAuthAttempts = 0;
+let pizzaPurchaseCount = 0;
+let pizzaFailureCount = 0;
+let pizzaRevenue = 0.0;
 
 // Middleware to track requests
 function requestTracker(req, res, next) {
+    if (req.method === "OPTIONS") {
+        next();
+        return;
+    }
     const endpoint = req.method;
     requests[endpoint] = (requests[endpoint] | 0) + 1;
 
@@ -76,6 +83,15 @@ function getMemoryUsagePercentage() {
     return memoryUsage.toFixed(2);
 }
 
+function pizzaPurchase(success, latency, price) {
+    if (success === true) {
+        pizzaPurchaseCount++;
+        pizzaRevenue += price;
+    } else {
+        pizzaFailureCount++;
+    }
+}
+
 // Send metrics to Grafana every 10 seconds
 setInterval(() => {
     const metrics = [];
@@ -108,6 +124,11 @@ setInterval(() => {
     // System CPU and Memory usage
     metrics.push(createMetric('cpuUsage', getCpuUsagePercentage(), '1', 'gauge', 'asDouble', {}));
     metrics.push(createMetric('memoryUsage', getMemoryUsagePercentage(), '1', 'gauge', 'asDouble', {}));
+
+    // Send pizza purchase data
+    metrics.push(createMetric('pizzaPurchases', pizzaPurchaseCount, '1', 'sum', 'asInt', { "type": "Pizza purchase successes" }));
+    metrics.push(createMetric('pizzaFailures', pizzaFailureCount, '1', 'sum', 'asInt', { "type": "Pizza purchase failures" }));
+    metrics.push(createMetric('pizzaRevenue', pizzaRevenue, '1', 'sum', 'asDouble', {}));
 
     sendMetricToGrafana(metrics);
 }, 10000);
@@ -172,4 +193,4 @@ function sendMetricToGrafana(metrics) {
         });
 }
 
-module.exports = { requestTracker, addActiveUser, removeActiveUser, successfulAuthAttempt: logSuccessfulAuthAttempt, unsuccessfulAuthAttempt: logFailedAuthAttempt };
+module.exports = { requestTracker, addActiveUser, removeActiveUser, successfulAuthAttempt: logSuccessfulAuthAttempt, unsuccessfulAuthAttempt: logFailedAuthAttempt, pizzaPurchase };
