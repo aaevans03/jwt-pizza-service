@@ -28,7 +28,8 @@ let failedAuthAttempts = 0;
 let pizzaPurchaseCount = 0;
 let pizzaFailureCount = 0;
 let pizzaRevenue = 0.0;
-let latencyList = [];
+let pizzaLatencyList = [];
+let serviceEndpointLatencyList = [];
 
 // Middleware to track requests
 function requestTracker(req, res, next) {
@@ -85,13 +86,17 @@ function getMemoryUsagePercentage() {
 }
 
 function pizzaPurchase(success, latency, price) {
-    latencyList.push(latency);
+    pizzaLatencyList.push(latency);
     if (success === true) {
         pizzaPurchaseCount++;
         pizzaRevenue += price;
     } else {
         pizzaFailureCount++;
     }
+}
+
+function serviceEndpointLatency(latency) {
+    serviceEndpointLatencyList.push(latency);
 }
 
 // Send metrics to Grafana every 10 seconds
@@ -133,15 +138,18 @@ setInterval(() => {
     metrics.push(createMetric('pizzaRevenue', pizzaRevenue, '1', 'sum', 'asDouble', {}));
 
     // Send pizza creation latency data
-    let totalLatency = 0;
-    for (const latency of latencyList) {
-        totalLatency += latency;
-    }
-    const avgLatency = totalLatency / latencyList.length;
+    const totalPizzaLatency = pizzaLatencyList.reduce((total, curValue) => total + curValue, 0);
+    const avgPizzaLatency = totalPizzaLatency / pizzaLatencyList.length;
 
-    metrics.push(createMetric('pizzaCreationLatency', latencyList.length > 0 ? avgLatency : 0, '1', 'gauge', 'asDouble', {}));
+    metrics.push(createMetric('pizzaCreationLatency', pizzaLatencyList.length > 0 ? avgPizzaLatency : 0, '1', 'gauge', 'asDouble', {}));
+    pizzaLatencyList = [];
 
-    latencyList = [];
+    // General service endpoint latency
+    const totalServiceLatency = serviceEndpointLatencyList.reduce((total, curValue) => total + curValue, 0);
+    const avgServiceLatency = totalServiceLatency / serviceEndpointLatencyList.length;
+
+    metrics.push(createMetric('serviceEndpointLatency', serviceEndpointLatencyList.length > 0 ? avgServiceLatency : 0, '1', 'gauge', 'asDouble', {}));
+    serviceEndpointLatencyList = [];
 
     sendMetricToGrafana(metrics);
 }, 10000);
@@ -206,4 +214,4 @@ function sendMetricToGrafana(metrics) {
         });
 }
 
-module.exports = { requestTracker, addActiveUser, removeActiveUser, successfulAuthAttempt: logSuccessfulAuthAttempt, unsuccessfulAuthAttempt: logFailedAuthAttempt, pizzaPurchase };
+module.exports = { requestTracker, addActiveUser, removeActiveUser, successfulAuthAttempt: logSuccessfulAuthAttempt, unsuccessfulAuthAttempt: logFailedAuthAttempt, pizzaPurchase, serviceEndpointLatency };

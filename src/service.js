@@ -24,6 +24,18 @@ app.use((req, res, next) => {
   next();
 });
 
+// Latency reporter
+app.use((req, res, next) => {
+  const startTime = Date.now();
+
+  res.on('finish', () => {
+    const endTime = Date.now();
+    const totalTime = endTime - startTime;
+    metrics.serviceEndpointLatency(totalTime);
+  });
+  next();
+});
+
 const apiRouter = express.Router();
 app.use(metrics.requestTracker);
 app.use('/api', apiRouter);
