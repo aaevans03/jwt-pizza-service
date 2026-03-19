@@ -5,8 +5,8 @@
     "name": "aambwvz",
     "namespace": "stacks-1554289",
     "uid": "c36f6837-4411-4223-aae3-b13e7fa7d811",
-    "resourceVersion": "1773947269752563",
-    "generation": 1,
+    "resourceVersion": "1773948562915582",
+    "generation": 2,
     "creationTimestamp": "2026-03-19T19:07:49Z",
     "labels": {
       "grafana.app/deprecatedInternalID": "3585007733235712"
@@ -14,7 +14,9 @@
     "annotations": {
       "grafana.app/createdBy": "user:fffmg8hg6lh4wa",
       "grafana.app/folder": "",
-      "grafana.app/saved-from-ui": "Grafana Cloud (steady)"
+      "grafana.app/saved-from-ui": "Grafana Cloud (steady)",
+      "grafana.app/updatedBy": "user:fffmg8hg6lh4wa",
+      "grafana.app/updatedTimestamp": "2026-03-19T19:29:22Z"
     }
   },
   "spec": {
@@ -65,7 +67,7 @@
                       },
                       "spec": {
                         "editorMode": "builder",
-                        "expr": "rate(requests_total{endpoint=\"Total\"}[1m])",
+                        "expr": "rate(requests_total{endpoint=\"Total\", source=\"jwt-pizza-service\"}[1m])",
                         "instant": false,
                         "legendFormat": "{{endpoint}}",
                         "range": true
@@ -88,7 +90,7 @@
                       "spec": {
                         "editorMode": "builder",
                         "exemplar": false,
-                        "expr": "rate(requests_total{source=\"jwt-pizza-service-dev\", endpoint!=\"Total\"}[1m])",
+                        "expr": "rate(requests_total{source=\"jwt-pizza-service\", endpoint!=\"Total\"}[1m])",
                         "instant": false,
                         "legendFormat": "{{endpoint}}",
                         "range": true
@@ -108,10 +110,11 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.0.0-22843068776.patch2",
+            "version": "13.0.0-23069273608.patch3",
             "spec": {
               "options": {
                 "annotations": {
+                  "clustering": -1,
                   "multiLane": false
                 },
                 "legend": {
@@ -211,7 +214,7 @@
                       },
                       "spec": {
                         "editorMode": "builder",
-                        "expr": "activeUserCount_ratio",
+                        "expr": "activeUserCount_ratio{source=\"jwt-pizza-service\"}",
                         "format": "time_series",
                         "legendFormat": "Number of Active Users",
                         "range": true
@@ -231,7 +234,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "barchart",
-            "version": "13.0.0-22843068776.patch2",
+            "version": "13.0.0-23069273608.patch3",
             "spec": {
               "options": {
                 "barRadius": 0,
@@ -328,7 +331,7 @@
                       },
                       "spec": {
                         "editorMode": "builder",
-                        "expr": "rate(authAttempts_total{type=\"success\"}[1m])",
+                        "expr": "rate(authAttempts_total{type=\"success\", source=\"jwt-pizza-service\"}[1m])",
                         "legendFormat": "{{type}}",
                         "range": true
                       }
@@ -349,7 +352,7 @@
                       },
                       "spec": {
                         "editorMode": "builder",
-                        "expr": "rate(authAttempts_total{type=\"failure\"}[1m])",
+                        "expr": "rate(authAttempts_total{type=\"failure\", source=\"jwt-pizza-service\"}[1m])",
                         "instant": false,
                         "legendFormat": "{{type}}",
                         "range": true
@@ -369,10 +372,11 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.0.0-22843068776.patch2",
+            "version": "13.0.0-23069273608.patch3",
             "spec": {
               "options": {
                 "annotations": {
+                  "clustering": -1,
                   "multiLane": false
                 },
                 "legend": {
@@ -487,7 +491,7 @@
                       "spec": {
                         "editorMode": "builder",
                         "exemplar": false,
-                        "expr": "cpuUsage_ratio",
+                        "expr": "cpuUsage_ratio{source=\"jwt-pizza-service\"}",
                         "format": "time_series",
                         "instant": false,
                         "interval": "0",
@@ -509,7 +513,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "gauge",
-            "version": "13.0.0-22843068776.patch2",
+            "version": "13.0.0-23069273608.patch3",
             "spec": {
               "options": {
                 "barShape": "flat",
@@ -594,7 +598,7 @@
                       },
                       "spec": {
                         "editorMode": "builder",
-                        "expr": "memoryUsage_ratio",
+                        "expr": "memoryUsage_ratio{source=\"jwt-pizza-service\"}",
                         "legendFormat": "__auto",
                         "range": true
                       }
@@ -613,7 +617,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "gauge",
-            "version": "13.0.0-22843068776.patch2",
+            "version": "13.0.0-23069273608.patch3",
             "spec": {
               "options": {
                 "barShape": "flat",
@@ -700,7 +704,7 @@
                       },
                       "spec": {
                         "editorMode": "builder",
-                        "expr": "rate(pizzaPurchases_total[1m])",
+                        "expr": "rate(pizzaPurchases_total{source=\"jwt-pizza-service\"}[1m])",
                         "legendFormat": "{{type}}",
                         "range": true
                       }
@@ -721,7 +725,7 @@
                       },
                       "spec": {
                         "editorMode": "builder",
-                        "expr": "rate(pizzaFailures_total[1m])",
+                        "expr": "rate(pizzaFailures_total{source=\"jwt-pizza-service\"}[1m])",
                         "instant": false,
                         "legendFormat": "{{type}}",
                         "range": true
@@ -741,10 +745,11 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.0.0-22843068776.patch2",
+            "version": "13.0.0-23069273608.patch3",
             "spec": {
               "options": {
                 "annotations": {
+                  "clustering": -1,
                   "multiLane": false
                 },
                 "legend": {
@@ -874,7 +879,7 @@
                       "spec": {
                         "editorMode": "builder",
                         "exemplar": false,
-                        "expr": "rate(pizzaRevenue_total[1m])",
+                        "expr": "rate(pizzaRevenue_total{source=\"jwt-pizza-service\"}[1m])",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "__auto",
@@ -895,7 +900,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.0.0-22843068776.patch2",
+            "version": "13.0.0-23069273608.patch3",
             "spec": {
               "options": {
                 "colorMode": "value",
@@ -962,7 +967,7 @@
                       },
                       "spec": {
                         "editorMode": "builder",
-                        "expr": "pizzaCreationLatency_ratio",
+                        "expr": "pizzaCreationLatency_ratio{source=\"jwt-pizza-service\"}",
                         "legendFormat": "Latency (ms)",
                         "range": true
                       }
@@ -981,10 +986,11 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.0.0-22843068776.patch2",
+            "version": "13.0.0-23069273608.patch3",
             "spec": {
               "options": {
                 "annotations": {
+                  "clustering": -1,
                   "multiLane": false
                 },
                 "legend": {
@@ -1085,7 +1091,7 @@
                       },
                       "spec": {
                         "editorMode": "builder",
-                        "expr": "serviceEndpointLatency_ratio",
+                        "expr": "serviceEndpointLatency_ratio{source=\"jwt-pizza-service\"}",
                         "legendFormat": "Latency (ms)",
                         "range": true
                       }
@@ -1104,10 +1110,11 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.0.0-22843068776.patch2",
+            "version": "13.0.0-23069273608.patch3",
             "spec": {
               "options": {
                 "annotations": {
+                  "clustering": -1,
                   "multiLane": false
                 },
                 "legend": {
