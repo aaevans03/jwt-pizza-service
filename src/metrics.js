@@ -28,6 +28,7 @@ let failedAuthAttempts = 0;
 let pizzaPurchaseCount = 0;
 let pizzaFailureCount = 0;
 let pizzaRevenue = 0.0;
+let latencyList = [];
 
 // Middleware to track requests
 function requestTracker(req, res, next) {
@@ -84,6 +85,7 @@ function getMemoryUsagePercentage() {
 }
 
 function pizzaPurchase(success, latency, price) {
+    latencyList.push(latency);
     if (success === true) {
         pizzaPurchaseCount++;
         pizzaRevenue += price;
@@ -129,6 +131,17 @@ setInterval(() => {
     metrics.push(createMetric('pizzaPurchases', pizzaPurchaseCount, '1', 'sum', 'asInt', { "type": "Pizza purchase successes" }));
     metrics.push(createMetric('pizzaFailures', pizzaFailureCount, '1', 'sum', 'asInt', { "type": "Pizza purchase failures" }));
     metrics.push(createMetric('pizzaRevenue', pizzaRevenue, '1', 'sum', 'asDouble', {}));
+
+    // Send pizza creation latency data
+    let totalLatency = 0;
+    for (const latency of latencyList) {
+        totalLatency += latency;
+    }
+    const avgLatency = totalLatency / latencyList.length;
+
+    metrics.push(createMetric('pizzaCreationLatency', latencyList.length > 0 ? avgLatency : 0, '1', 'gauge', 'asDouble', {}));
+
+    latencyList = [];
 
     sendMetricToGrafana(metrics);
 }, 10000);
