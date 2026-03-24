@@ -61,7 +61,7 @@ jobs:
               apiKey: '${{ secrets.METRICS_API_KEY }}',
               accountId: '${{ secrets.METRICS_ACCOUNT_ID_KEY }}',
             },
-            logging: {
+            logger: {
               source: 'jwt-pizza-service',
               endpointUrl: '${{ secrets.LOGGING_ENDPOINT_URL }}',
               apiKey: '${{ secrets.LOGGING_API_KEY }}',
