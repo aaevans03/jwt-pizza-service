@@ -42,7 +42,7 @@ class Logger {
 
     // Things to sanitize: passwords, authTokens, 
     sanitize(logData) {
-        logData = JSON.stringify(logData, "\n----------\n");
+        logData = JSON.stringify(logData);
 
         // Normal data
         logData = this.replaceData(logData, "id");
@@ -53,8 +53,6 @@ class Logger {
         logData = this.replaceData(logData, "jwt");
         logData = this.replaceData(logData, "role");
 
-
-        console.log(logData);
         return logData;
     }
 
@@ -62,13 +60,12 @@ class Logger {
         if (fieldName === "id") {
             return logData.replace(/(\\)\1*"id(\\)\1*":\s*[0-9]*/g, '\\"id\\": ***')
         }
-        const regex = new RegExp(`(\\\\)\\1*"${fieldName}(\\\\)\\1*":\\s*(\\\\)\\1*"[^"]*(\\\\)\\1*"`, 'g');
+        const regex = new RegExp(`(\\\\)*["']${fieldName}(\\\\)*["']:\\s*(\\\\)*"[^"']*(\\\\)*["']`, 'g');
         return logData.replace(regex, `\\"${fieldName}\\": \\"*****\\"`);
     }
 
     sendLogToGrafana(event) {
         const body = JSON.stringify(event);
-        // console.log(body);
         fetch(`${config.logger.endpointUrl}`, {
             method: 'post',
             body: body,
