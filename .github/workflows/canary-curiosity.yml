@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: Canary Deployment (Curiosity Report)
 
 on:
   workflow_dispatch:
